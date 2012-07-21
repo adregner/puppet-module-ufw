@@ -1,4 +1,4 @@
-define ufw::deny($proto='tcp', $port='all', $ip='', $from='any') {
+define ufw::deny($proto='tcp', $port='all', $ip='', $from='any', $direction='in', $log='') {
 
   if $::ipaddress_eth0 != undef {
     $ipadr = $ip ? {
@@ -14,10 +14,19 @@ define ufw::deny($proto='tcp', $port='all', $ip='', $from='any') {
     default => "$from/$proto",
   }
 
-  exec { "ufw-deny-${proto}-from-${from}-to-${ipadr}-port-${port}":
+  if $log != '' {
+	$log_rule = $log ? {
+		'log-all' => 'log-all',
+		default   => 'log',
+	}
+  } else {
+	$log_rule = ''
+  }
+
+  exec { "ufw-deny-${direction}-${proto}-from-${from}-to-${ipadr}-port-${port}":
     command => $port ? {
-      'all'   => "ufw deny proto $proto from $from to $ipadr",
-      default => "ufw deny proto $proto from $from to $ipadr port $port",
+      'all'   => "ufw deny $direction $log_rule proto $proto from $from to $ipadr",
+      default => "ufw deny $direction $log_rule proto $proto from $from to $ipadr port $port",
     },
     unless  => $port ? {
       'all'   => "ufw status | grep -E \"$ipadr/$proto +DENY +$from_match\"",
