@@ -11,7 +11,7 @@ define ufw::allow($proto='tcp', $port='all', $ip='', $from='any', $direction='in
 
   $from_match = $from ? {
     'any'   => 'Anywhere',
-    default => "$from/$proto",
+    default => "$from",
   }
 
   if $log != '' {
